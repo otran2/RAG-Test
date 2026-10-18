@@ -1,0 +1,12 @@
+# Personal env file with API keys
+.env
+
+# Python junk
+__pycache__/
+*.pyc
+
+# Local model cache
+.hf_cache/
+
+# Stray wheel downloads
+*.whl
