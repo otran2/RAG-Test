@@ -5,7 +5,9 @@ api_key = os.environ["PINECONE_API_KEY"]
 
 import os
 from pinecone import Pinecone, ServerlessSpec
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sentence_transformers import CrossEncoder
 import ollama
@@ -38,8 +40,14 @@ def get_chunks(text: str, chunk_size: int = 1000, overlap: int = 200):
         start += (chunk_size - overlap)
     return chunks
 
+templates = Jinja2Templates(directory="templates")
 reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 index = pc.Index("ragtest")
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_dashboard(request: Request):
+    # This renders dashboard.html onto the screen and passes the user request properties to it
+    return templates.TemplateResponse(request, "dashboard.html", {"title": "RAG Dashboard"})
 
 @app.post("/ingest", summary="Steps 1-3: Load, Chunk, Embed, and Index Data")
 def pipeline_ingest(data: IngestPayload):

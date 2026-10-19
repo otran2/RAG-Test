@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+{% raw %}
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #eef1f4;
+    --surface: #ffffff;
+    --ink: #172033;
+    --muted: #5b667a;
+    --line: #d5dbe3;
+    --accent: #2446c8;
+    --accent-ink: #ffffff;
+    --accent-soft: #e4eafb;
+    --error: #b3261e;
+    --error-soft: #fbe9e7;
+    --ok: #1e7a4c;
+    --ok-soft: #e3f3ea;
+    --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f141c;
+      --surface: #171e29;
+      --ink: #e8ecf2;
+      --muted: #98a3b5;
+      --line: #2a3342;
+      --accent: #8aa0ff;
+      --accent-ink: #0f141c;
+      --accent-soft: #1e2a4d;
+      --error: #ff8a80;
+      --error-soft: #3a1f1e;
+      --ok: #6fd3a1;
+      --ok-soft: #173326;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 48px 20px 80px; }
+
+  header.top { margin-bottom: 32px; }
+  header.top h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  header.top p { margin: 0; color: var(--muted); max-width: 52ch; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .panel-head { padding: 22px 28px 18px; border-bottom: 1px solid var(--line); }
+  .panel-head h2 { margin: 0 0 2px; font-size: 20px; font-weight: 600; letter-spacing: -0.005em; }
+  .panel-head p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .panel-body { padding: 24px 28px 28px; }
+
+  /* Tabs */
+  .tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .tab {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-weight: 500;
+    font-size: 14.5px;
+    padding: 7px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-selected="true"] {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+
+  /* Fields */
+  .field { margin-bottom: 18px; }
+  label.lbl, .lbl {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .hint { display: block; font-size: 13px; color: var(--muted); margin-top: 6px; }
+  input[type="text"], input[type="url"], textarea {
+    width: 100%;
+    font: inherit;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 10px 12px;
+  }
+  textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.8; }
+  input:focus-visible, textarea:focus-visible, button:focus-visible, .drop:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* File drop zone */
+  .drop {
+    display: block;
+    border: 1.5px dashed var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .drop input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .drop strong { display: block; font-weight: 600; }
+  .drop span { color: var(--muted); font-size: 14px; }
+  .file-chip {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: var(--accent-soft);
+    border-radius: 7px;
+    font-size: 14.5px;
+  }
+  .file-chip.show { display: flex; }
+  .file-chip .name { font-weight: 500; overflow-wrap: anywhere; }
+  .file-chip .meta { color: var(--muted); white-space: nowrap; }
+  .link-btn {
+    appearance: none; border: 0; background: none; font: inherit; font-size: 14px;
+    color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline;
+  }
+
+  /* Buttons */
+  .btn {
+    appearance: none;
+    border: 0;
+    border-radius: 7px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font: inherit;
+    font-weight: 600;
+    padding: 11px 22px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn:hover:not(:disabled) { filter: brightness(1.08); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .spinner {
+    width: 15px; height: 15px;
+    border: 2px solid currentColor; border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .busy .spinner { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } }
+
+  .actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  /* Switch */
+  .switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14.5px; user-select: none; }
+  .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .track {
+    width: 38px; height: 22px; border-radius: 11px;
+    background: var(--line); position: relative; flex: none;
+    transition: background 0.15s;
+  }
+  .track::after {
+    content: ""; position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--surface); box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+    transition: transform 0.15s;
+  }
+  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked + .track::after { transform: translateX(16px); }
+  .switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Status banner */
+  .status {
+    display: none;
+    margin-top: 18px;
+    padding: 11px 14px;
+    border-radius: 7px;
+    font-size: 14.5px;
+    overflow-wrap: anywhere;
+  }
+  .status.show { display: block; }
+  .status.info { background: var(--accent-soft); }
+  .status.ok { background: var(--ok-soft); color: var(--ok); }
+  .status.err { background: var(--error-soft); color: var(--error); }
+
+  /* Answer */
+  .result { display: none; margin-top: 26px; border-top: 1px solid var(--line); padding-top: 22px; }
+  .result.show { display: block; }
+  .answer-label { font-size: 13px; color: var(--muted); margin: 0 0 6px; }
+  .answer {
+    font-family: var(--serif);
+    font-size: 24px;
+    line-height: 1.4;
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .chunks { display: none; margin-top: 28px; }
+  .chunks.show { display: block; }
+  .chunks-head { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+  .chunk {
+    margin: 0 0 12px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--accent);
+    background: var(--bg);
+    border-radius: 0 7px 7px 0;
+  }
+  .chunk-title { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
+  .chunk-text { margin: 0; font-size: 14.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  @media (max-width: 520px) {
+    .page { padding-top: 32px; }
+    header.top h1 { font-size: 36px; }
+    .panel-head, .panel-body { padding-left: 18px; padding-right: 18px; }
+    .btn { width: 100%; justify-content: center; }
+  }
+</style>
+{% endraw %}
+</head>
+<body>
+<main class="page">
+
+  <header class="top">
+    <h1>{{ title }}</h1>
+    <p>Add documents to your knowledge base, then ask questions answered from what you added.</p>
+  </header>
+
+  <!-- ============ INGEST ============ -->
+  <section class="panel" aria-labelledby="ingest-h">
+    <div class="panel-head">
+      <h2 id="ingest-h">Add a document</h2>
+      <p>The text is split into chunks, embedded, and stored in Pinecone.</p>
+    </div>
+    <div class="panel-body">
+
+      <div class="tabs" role="tablist" aria-label="Document source">
+        <button class="tab" role="tab" id="tab-url" aria-selected="true" aria-controls="pane-url" type="button">From a URL</button>
+        <button class="tab" role="tab" id="tab-file" aria-selected="false" aria-controls="pane-file" tabindex="-1" type="button">Upload a file</button>
+      </div>
+
+      <div id="pane-url" role="tabpanel" aria-labelledby="tab-url">
+        <div class="field">
+          <label class="lbl" for="url-input">Page or file address</label>
+          <input type="url" id="url-input" placeholder="https://example.com/handbook.txt" autocomplete="off">
+          <span class="hint">Web pages are reduced to their readable text before indexing.</span>
+        </div>
+      </div>
+
+      <div id="pane-file" role="tabpanel" aria-labelledby="tab-file" hidden>
+        <div class="field">
+          <label class="drop" id="drop" for="file-input">
+            <input type="file" id="file-input" accept=".txt,.md,.markdown,.csv,.json,.html,.htm,.log,.rst,text/*">
+            <strong>Choose a file or drop it here</strong>
+            <span>Plain text formats: .txt, .md, .csv, .json, .html</span>
+          </label>
+          <div class="file-chip" id="file-chip">
+            <span class="name" id="file-name"></span>
+            <span class="meta" id="file-meta"></span>
+            <button type="button" class="link-btn" id="file-clear">Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="doc-id">Document ID</label>
+        <input type="text" id="doc-id" placeholder="employee-handbook" autocomplete="off" spellcheck="false">
+        <span class="hint">Names this document's chunks. Reusing an ID replaces chunks with the same numbers.</span>
+      </div>
+
+      <button class="btn" id="ingest-btn" type="button">
+        <span class="spinner" aria-hidden="true"></span>
+        <span class="btn-label">Add to knowledge base</span>
+      </button>
+
+      <div class="status" id="ingest-status" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ============ ASK ============ -->
+  <section class="panel" aria-labelledby="ask-h">
+    <div class="panel-head">
+      <h2 id="ask-h">Ask a question</h2>
+      <p>The most relevant passages are retrieved, reranked, and used to write the answer.</p>
+    </div>
+    <div class="panel-body">
+
+      <div class="field">
+        <label class="lbl" for="question">Your question</label>
+        <textarea id="question" placeholder="What is the policy on remote work?"></textarea>
+        <span class="hint">Press Ctrl+Enter (Cmd+Enter on Mac) to generate.</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="ask-btn" type="button">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="btn-label">Generate answer</span>
+        </button>
+        <label class="switch">
+          <input type="checkbox" id="show-chunks" role="switch">
+          <span class="track" aria-hidden="true"></span>
+          <span>Show retrieved chunks</span>
+        </label>
+      </div>
+
+      <div class="status" id="ask-status" role="status" aria-live="polite"></div>
+
+      <div class="result" id="result">
+        <p class="answer-label">Answer</p>
+        <p class="answer" id="answer"></p>
+
+        <div class="chunks" id="chunks">
+          <p class="chunks-head" id="chunks-head"></p>
+          <div id="chunks-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+{% raw %}
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---------- helpers ----------
+  function setStatus(el, kind, msg) {
+    el.className = "status show " + kind;
+    el.textContent = msg;
+  }
+  function clearStatus(el) { el.className = "status"; el.textContent = ""; }
+  function setBusy(btn, busy, idleLabel, busyLabel) {
+    btn.disabled = busy;
+    btn.classList.toggle("busy", busy);
+    btn.querySelector(".btn-label").textContent = busy ? busyLabel : idleLabel;
+  }
+  function slug(s) {
+    return s.toLowerCase().replace(/\.[a-z0-9]{1,5}$/i, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+  }
+  function formatSize(n) {
+    if (n < 1024) return n + " B";
+    if (n < 1048576) return (n / 1024).toFixed(1) + " KB";
+    return (n / 1048576).toFixed(1) + " MB";
+  }
+  function postJSON(path, body) {
+    return fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    }).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        if (!res.ok) {
+          var d = data && data.detail;
+          var err = new Error(typeof d === "string" ? d : d ? JSON.stringify(d) : "Request failed (" + res.status + ")");
+          err.status = res.status;
+          throw err;
+        }
+        return data;
+      });
+    });
+  }
+
+  // ---------- tabs ----------
+  var tabUrl = $("tab-url"), tabFile = $("tab-file");
+  var paneUrl = $("pane-url"), paneFile = $("pane-file");
+  var activeTab = "url";
+
+  function selectTab(which) {
+    activeTab = which;
+    var isUrl = which === "url";
+    tabUrl.setAttribute("aria-selected", isUrl);
+    tabFile.setAttribute("aria-selected", !isUrl);
+    tabUrl.tabIndex = isUrl ? 0 : -1;
+    tabFile.tabIndex = isUrl ? -1 : 0;
+    paneUrl.hidden = !isUrl;
+    paneFile.hidden = isUrl;
+    clearStatus($("ingest-status"));
+  }
+  tabUrl.addEventListener("click", function () { selectTab("url"); });
+  tabFile.addEventListener("click", function () { selectTab("file"); });
+  [tabUrl, tabFile].forEach(function (t) {
+    t.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        var next = activeTab === "url" ? "file" : "url";
+        selectTab(next);
+        (next === "url" ? tabUrl : tabFile).focus();
+      }
+    });
+  });
+
+  // ---------- document id (auto-suggest until the user edits it) ----------
+  var docId = $("doc-id");
+  var docIdTouched = false;
+  docId.addEventListener("input", function () { docIdTouched = true; });
+  function suggestId(value) {
+    if (!docIdTouched && value) docId.value = value;
+  }
+
+  $("url-input").addEventListener("input", function (e) {
+    var v = e.target.value.trim();
+    try {
+      var u = new URL(v);
+      var last = u.pathname.split("/").filter(Boolean).pop() || u.hostname;
+      suggestId(slug(last) || slug(u.hostname));
+    } catch (err) { /* not a full URL yet */ }
+  });
+
+  // ---------- file handling ----------
+  var fileInput = $("file-input"), drop = $("drop");
+  var chosenFile = null;
+  var MAX_BYTES = 5 * 1024 * 1024;
+
+  function setFile(f) {
+    if (!f) return;
+    if (f.size > MAX_BYTES) {
+      setStatus($("ingest-status"), "err", "That file is " + formatSize(f.size) + ". Files over 5 MB are too large to embed in one go; split it first.");
+      return;
+    }
+    chosenFile = f;
+    $("file-name").textContent = f.name;
+    $("file-meta").textContent = formatSize(f.size);
+    $("file-chip").classList.add("show");
+    clearStatus($("ingest-status"));
+    suggestId(slug(f.name));
+  }
+  fileInput.addEventListener("change", function () { setFile(fileInput.files[0]); });
+  $("file-clear").addEventListener("click", function () {
+    chosenFile = null;
+    fileInput.value = "";
+    $("file-chip").classList.remove("show");
+  });
+  ["dragenter", "dragover"].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add("over"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove("over"); });
+  });
+  drop.addEventListener("drop", function (e) {
+    if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
+  });
+
+  function readFileText(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () { resolve(String(r.result)); };
+      r.onerror = function () { reject(new Error("Could not read that file.")); };
+      r.readAsText(file);
+    });
+  }
+
+  // Strip tags from HTML files so markup isn't embedded as content
+  function htmlToText(html) {
+    var doc = new DOMParser().parseFromString(html, "text/html");
+    doc.querySelectorAll("script,style,nav,footer,noscript").forEach(function (n) { n.remove(); });
+    return (doc.body ? doc.body.innerText || doc.body.textContent : "").replace(/\n{3,}/g, "\n\n").trim();
+  }
+
+  // Backend /fetch-url first (avoids CORS); falls back to a direct browser fetch
+  function fetchUrlText(url) {
+    return postJSON("/fetch-url", { url: url }).then(function (d) { return d.text; }).catch(function (err) {
+      if (err.status !== 404 && err.status !== 405) throw err;
+      return fetch(url).then(function (res) {
+        if (!res.ok) throw new Error("The address returned " + res.status + ".");
+        return res.text();
+      }).then(function (t) {
+        return /<html|<!doctype/i.test(t.slice(0, 500)) ? htmlToText(t) : t;
+      }).catch(function () {
+        throw new Error("The browser couldn't download that address (blocked by the site's CORS policy). Add the /fetch-url endpoint to your backend, or download the file and upload it instead.");
+      });
+    });
+  }
+
+  // ---------- ingest ----------
+  var ingestBtn = $("ingest-btn"), ingestStatus = $("ingest-status");
+  var INGEST_IDLE = "Add to knowledge base";
+
+  ingestBtn.addEventListener("click", function () {
+    var id = docId.value.trim();
+    if (!id) { setStatus(ingestStatus, "err", "Enter a document ID."); docId.focus(); return; }
+
+    var source;
+    if (activeTab === "url") {
+      var url = $("url-input").value.trim();
+      if (!/^https?:\/\//i.test(url)) { setStatus(ingestStatus, "err", "Enter a full address starting with http:// or https://."); $("url-input").focus(); return; }
+      source = function () { return fetchUrlText(url); };
+    } else {
+      if (!chosenFile) { setStatus(ingestStatus, "err", "Choose a file to upload."); return; }
+      source = function () {
+        return readFileText(chosenFile).then(function (t) {
+          return /\.html?$/i.test(chosenFile.name) ? htmlToText(t) : t;
+        });
+      };
+    }
+
+    setBusy(ingestBtn, true, INGEST_IDLE, "Working…");
+    setStatus(ingestStatus, "info", activeTab === "url" ? "Downloading the document…" : "Reading the file…");
+
+    source().then(function (text) {
+      text = (text || "").trim();
+      if (text.length < 10) throw new Error("No readable text was found in that document.");
+      setStatus(ingestStatus, "info", "Embedding " + text.length.toLocaleString() + " characters. Long documents can take a minute.");
+      return postJSON("/ingest", { document_id: id, raw_text: text });
+    }).then(function (data) {
+      setStatus(ingestStatus, "ok", "Added \u201C" + id + "\u201D: " + data.chunks_indexed + " chunk" + (data.chunks_indexed === 1 ? "" : "s") + " indexed.");
+    }).catch(function (err) {
+      setStatus(ingestStatus, "err", err.message);
+    }).then(function () {
+      setBusy(ingestBtn, false, INGEST_IDLE, "Working…");
+    });
+  });
+
+  // ---------- ask ----------
+  var askBtn = $("ask-btn"), askStatus = $("ask-status");
+  var question = $("question"), showChunks = $("show-chunks");
+  var ASK_IDLE = "Generate answer";
+
+  function applyChunkVisibility() {
+    $("chunks").classList.toggle("show", showChunks.checked);
+  }
+  showChunks.addEventListener("change", applyChunkVisibility);
+
+  function renderResult(data) {
+    $("answer").textContent = (data.answer || "").trim() || "The model returned an empty answer.";
+
+    var list = $("chunks-list");
+    list.textContent = "";
+    var used = data.reranked_context_used || [];
+    $("chunks-head").textContent = "Top " + used.length + " of " + data.raw_retrieval_count + " retrieved passages, best match first. These were given to the model.";
+    used.forEach(function (text, i) {
+      var box = document.createElement("div");
+      box.className = "chunk";
+      var title = document.createElement("p");
+      title.className = "chunk-title";
+      title.textContent = "Passage " + (i + 1);
+      var body = document.createElement("p");
+      body.className = "chunk-text";
+      body.textContent = text;
+      box.appendChild(title);
+      box.appendChild(body);
+      list.appendChild(box);
+    });
+
+    $("result").classList.add("show");
+    applyChunkVisibility();
+  }
+
+  function ask() {
+    var q = question.value.trim();
+    if (!q) { setStatus(askStatus, "err", "Type a question first."); question.focus(); return; }
+
+    setBusy(askBtn, true, ASK_IDLE, "Generating…");
+    setStatus(askStatus, "info", "Searching, reranking, and writing an answer…");
+    $("result").classList.remove("show");
+
+    postJSON("/ask", { question: q }).then(function (data) {
+      clearStatus(askStatus);
+      renderResult(data);
+    }).catch(function (err) {
+      setStatus(askStatus, "err", err.message);
+    }).then(function () {
+      setBusy(askBtn, false, ASK_IDLE, "Generating…");
+    });
+  }
+  askBtn.addEventListener("click", ask);
+  question.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); if (!askBtn.disabled) ask(); }
+  });
+})();
+</script>
+{% endraw %}
+</body>
+</html>
