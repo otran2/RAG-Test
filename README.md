@@ -1,4 +1,4 @@
-# RAG-Test
+# RAG-For-You
 ## Application overview
 A local RAG app that connects with pinecone to retrieve stored documents and chunks to generate questions for a user query. An end to end pipeline that handles parsing, chunking, embedding, and storing vectors alongside retrieval, reranking, and generation. 
 
